@@ -2,6 +2,7 @@
 var React=require('react');
 var WeatherChild=require('./WeatherChild');
 var fun=false;
+var name,country;
 var Weather=React.createClass({
  getInitialState :function()
  {
@@ -19,7 +20,9 @@ var Weather=React.createClass({
      success:function(data)
      {
        fun=true;
-       this.setState({dataArray:data});
+       this.setState({dataArray:data.list});
+       name = data.city.name;
+       country = data.city.country;
      }.bind(this),
      error: function(xhr, status, err)
      {
@@ -39,8 +42,9 @@ var Weather=React.createClass({
          <div className="navbar-form" id="search">
            <input type="text" className="form-control border-color"  ref="cityBar" placeholder="Your city name"/>
            <button type="submit" onClick={this.getDataWithLocation} className="btn btn-default"><span className="glyphicon glyphicon-search"></span></button>
-           <hr></hr>
          </div>
+         <span className="icon"></span>
+         <h3> 5 day Weather Forecast  - {name} , {country}</h3>
        {done}
      </div>
  );
