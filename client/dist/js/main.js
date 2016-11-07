@@ -20744,6 +20744,7 @@ module.exports = require('./lib/React');
 var React=require('react');
 var WeatherChild=require('./WeatherChild');
 var fun=false;
+var name,country;
 var Weather=React.createClass({displayName: "Weather",
  getInitialState :function()
  {
@@ -20761,7 +20762,9 @@ var Weather=React.createClass({displayName: "Weather",
      success:function(data)
      {
        fun=true;
-       this.setState({dataArray:data});
+       this.setState({dataArray:data.list});
+       name = data.city.name;
+       country = data.city.country;
      }.bind(this),
      error: function(xhr, status, err)
      {
@@ -20780,9 +20783,10 @@ var Weather=React.createClass({displayName: "Weather",
      React.createElement("div", null, 
          React.createElement("div", {className: "navbar-form", id: "search"}, 
            React.createElement("input", {type: "text", className: "form-control border-color", ref: "cityBar", placeholder: "Your city name"}), 
-           React.createElement("button", {type: "submit", onClick: this.getDataWithLocation, className: "btn btn-default"}, React.createElement("span", {className: "glyphicon glyphicon-search"})), 
-           React.createElement("hr", null)
+           React.createElement("button", {type: "submit", onClick: this.getDataWithLocation, className: "btn btn-default"}, React.createElement("span", {className: "glyphicon glyphicon-search"}))
          ), 
+         React.createElement("span", {className: "icon"}), 
+         React.createElement("h3", null, " 5 day Weather Forecast  - ", name, " , ", country), 
        done
      )
  );
@@ -20792,44 +20796,33 @@ module.exports=Weather;
 },{"./WeatherChild":173,"react":171}],173:[function(require,module,exports){
 //child of weather
 var React=require('react');
-var obj={};
 var RowComponent=require('./grand.js');
 var WeatherChild=React.createClass({displayName: "WeatherChild",
 
-// Function to convert time to UTC
-changeTime: function(time) {
-    var date = new Date(time);
-    return date.toUTCString();
-},
-
-// Function to convert temperature from Kelvin to Celsius
-changeTemp: function(temp){
-  var tmp = Math.round(temp)-273;
-  return tmp;
-},
-
  render:function(){
-     var array=[];
-     var timer,description,pressure,humidity,speed,temp,temp_min;
-     var rows = $.map(this.props.data1, function(value, index){return value; });
+    var array=[];
+    var timer,description,pressure,humidity,speed,temp;
 
-    //Loop to retrieve weather data of 5 days every 3 hours
-    for(var i=4;i<rows.length;i++){
-    timer = rows[i].dt_txt;
-    description = rows[i].weather[0].description;
-    pressure = rows[i].main.pressure;
-    humidity = rows[i].main.humidity;
-    speed = rows[i].wind.speed;
-    temp = rows[i].main.temp;
-    temp_min = rows[i].main.temp_min;
-    array.push(React.createElement(RowComponent, {temp: this.changeTemp(temp), timer: this.changeTime(timer), temp_min: this.changeTemp(temp_min), description: description, pressure: pressure, humidity: humidity, speed: speed}));
-    }
+    // retrieve 5 days weather
+    this.props.data1.forEach(function(mydata){
+       timer = mydata.dt_txt;
+       var myDate = new Date(timer);
+       description = mydata.weather[0].description;
+       pressure = mydata.main.pressure;
+       humidity = mydata.main.humidity;
+       speed = mydata.wind.speed;
+       temp = mydata.main.temp;
+       if(myDate.getHours() === 21){
+          array.push(React.createElement(RowComponent, {temp: temp, timer: timer, description: description, 
+          pressure: pressure, humidity: humidity, speed: speed, key: mydata.dt}));
+       }
+     });
+
    return(
         React.createElement("div", null, 
-            React.createElement("h3", null, " 5 day / 3 hour Weather Forecast in ", this.props.data1.city.name, ", ", this.props.data1.city.country), 
             React.createElement("div", {className: "tab"}, 
                 React.createElement("table", {className: "table table-bordered table-hover my_table"}, 
-                    React.createElement("tbody", null, array)
+                    array
                 )
             )
         )
@@ -20841,14 +20834,31 @@ module.exports=WeatherChild
 // Printing Inbox items and sent items in a table
 var React = require('react');
 var RowComponent = React.createClass({displayName: "RowComponent",
+
+  // split date and convert to string format
+  changeTime:function(time) {
+      var date = new Date(time) + '';
+      var split = date.split(' ');
+      var a = split[0]+', '+split[2] + ' ' + split[1];
+      return a.toString();
+  },
+
+  // Function to convert temperature from Kelvin to Celsius
+  changeTemp:function(temp){
+    var tmp = Math.round(temp)-273;
+    return tmp;
+  },
   render: function() {
     return (
-      React.createElement("tr", null, 
-        React.createElement("td", null, this.props.timer), 
-        React.createElement("td", null, React.createElement("span", {className: "my_span"}, this.props.temp, " °C "), React.createElement("span", {className: "min_span"}, this.props.temp_min, " °C "), React.createElement("p", null, this.props.description), 
-        React.createElement("p", null, "pressure: ", this.props.pressure, " hpa"), 
-        React.createElement("p", null, "humidity: ", this.props.humidity, " %"), 
-        React.createElement("p", null, "wind: ", this.props.speed, " m/s")
+      React.createElement("tbody", null, 
+        React.createElement("tr", null, 
+            React.createElement("thead", null, 
+              React.createElement("th", null, this.changeTime(this.props.timer), " ", React.createElement("p", null, React.createElement("span", {className: "my_span"}, this.changeTemp(this.props.temp), " °C ")))
+            ), 
+            React.createElement("tr", null, 
+              React.createElement("td", null, React.createElement("span", {className: "min_span"}, this.props.description), " ", React.createElement("p", null, "wind:  ", this.props.speed, " m/s "), 
+              React.createElement("p", null, " pressure:  ", this.props.pressure, " hpa"), React.createElement("p", null, " humidity:  ", this.props.humidity, " %"))
+            )
         )
       )
     );
