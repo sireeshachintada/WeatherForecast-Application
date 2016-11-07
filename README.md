@@ -1,6 +1,6 @@
 # WeatherForecast-Application
 
-5 Day / 3 hr Weather Forecast application 
+5 Day Weather Forecast application 
 
 Implemented using MERN
 
